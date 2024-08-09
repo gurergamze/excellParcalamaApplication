@@ -258,8 +258,9 @@ namespace excellParcalamaApplication
 
                              genelToplamTable.Rows.Add(newRow);
 
-                             SetDataTable_To_Excel(genelToplamTable, vdmKod + "_GenelToplam");
-                         }
+                            string genelToplamFileName = "Aylık Cihaz Ücret Detayı " + vdmKod;
+                            SetDataTable_To_Excel(genelToplamTable, genelToplamFileName);
+                        }
                      }
 
 
@@ -308,7 +309,7 @@ namespace excellParcalamaApplication
                         string email = row["Email"].ToString();
                         // string attachmentPath = AppDomain.CurrentDomain.BaseDirectory.ToString() + @"ExcelExport\" + VDMKodu + ".xlsx";
                         string attachmentPath = Path.Combine(folderPath, VDMKodu + ".xlsx");
-                        string attachmentPath2 = Path.Combine(folderPath, VDMKodu + "_GenelToplam.xlsx");
+                        string attachmentPath2 = Path.Combine(folderPath, "Aylık Cihaz Ücret Detayı " + VDMKodu + ".xlsx");
                         if (File.Exists(attachmentPath))
                         {
                             SendEmail(email, emailBody, attachmentPath, attachmentPath2);
