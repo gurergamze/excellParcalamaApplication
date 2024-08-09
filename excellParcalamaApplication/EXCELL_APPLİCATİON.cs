@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
+using System.Configuration;
 
 
 
@@ -143,46 +144,42 @@ namespace excellParcalamaApplication
                     {
                         using (var workbook = new XLWorkbook(vdmFilePath))
                         {
+                            // Var olan sayfaların adlarını al ve kullanıcıya göster
                             var sheetNames = workbook.Worksheets.Select(ws => ws.Name).ToList();
                             MessageBox.Show($"Mevcut sayfalar: {string.Join(", ", sheetNames)}");
 
-                            // Geçerli sayfa adıyla sayfayı seçme
-                            string sheetName = "Sayfa1"; 
-                            if (sheetNames.Contains(sheetName))
+                            // İlk sayfayı otomatik olarak seç
+                            var worksheet = workbook.Worksheet(1);
+                            var headerRow = worksheet.Row(1);
+
+                            if (headerRow.Cells().Count() == 0)
                             {
-                                var worksheet = workbook.Worksheet(sheetName);
-                                var headerRow = worksheet.Row(1);
-                                if (headerRow.Cells().Count() == 0)
-                                {
-                                    MessageBox.Show("Başlık satırı bulunamadı.");
-                                    return;
-                                }
-
-                                foreach (var cell in headerRow.Cells())
-                                {
-                                    dtVdmInfo.Columns.Add(cell.GetValue<string>() ?? string.Empty);
-                                }
-
-                                for (int rowIndex = 2; rowIndex <= worksheet.LastRowUsed().RowNumber(); rowIndex++)
-                                {
-                                    var row = worksheet.Row(rowIndex);
-                                    if (row.Cells().All(cell => string.IsNullOrEmpty(cell.GetValue<string>())))
-                                    {
-                                        continue;
-                                    }
-
-                                    var dataRow = dtVdmInfo.NewRow();
-                                    for (int colIndex = 1; colIndex <= headerRow.Cells().Count(); colIndex++)
-                                    {
-                                        dataRow[colIndex - 1] = row.Cell(colIndex).GetValue<string>() ?? string.Empty;
-                                    }
-
-                                    dtVdmInfo.Rows.Add(dataRow);
-                                }
+                                MessageBox.Show("Başlık satırı bulunamadı.");
+                                return;
                             }
-                            else
+
+                            // DataTable'a sütun ekleme
+                            foreach (var cell in headerRow.Cells())
                             {
-                                MessageBox.Show($"Sayfa '{sheetName}' bulunamadı. Lütfen geçerli bir sayfa adı girin.");
+                                dtVdmInfo.Columns.Add(cell.GetValue<string>() ?? string.Empty);
+                            }
+
+                            // Veri satırlarını işleme
+                            for (int rowIndex = 2; rowIndex <= worksheet.LastRowUsed().RowNumber(); rowIndex++)
+                            {
+                                var row = worksheet.Row(rowIndex);
+                                if (row.Cells().All(cell => string.IsNullOrEmpty(cell.GetValue<string>())))
+                                {
+                                    continue;
+                                }
+
+                                var dataRow = dtVdmInfo.NewRow();
+                                for (int colIndex = 1; colIndex <= headerRow.Cells().Count(); colIndex++)
+                                {
+                                    dataRow[colIndex - 1] = row.Cell(colIndex).GetValue<string>() ?? string.Empty;
+                                }
+
+                                dtVdmInfo.Rows.Add(dataRow);
                             }
                         }
 
@@ -196,7 +193,7 @@ namespace excellParcalamaApplication
 
 
                     // Her VDM için genel toplam dosyası oluşturma
-                     foreach (string vdmKod in VDM_kodlari)
+                    foreach (string vdmKod in VDM_kodlari)
                      {
                          string vdmParcaFilePath = Path.Combine(folderPath, vdmKod + ".xlsx");
                          if (File.Exists(vdmParcaFilePath))
@@ -314,7 +311,7 @@ namespace excellParcalamaApplication
                         string attachmentPath2 = Path.Combine(folderPath, VDMKodu + "_GenelToplam.xlsx");
                         if (File.Exists(attachmentPath))
                         {
-                            SendEmail(email, "Excel Dosyanız", emailBody, attachmentPath);
+                            SendEmail(email, emailBody, attachmentPath, attachmentPath2);
                         }
                     }
 
@@ -329,20 +326,29 @@ namespace excellParcalamaApplication
 
 
         }
-        private void SendEmail(string toEmail, string subject, string body, string attachmentPath)
+        private void SendEmail(string toEmail, string body, string attachmentPath, string attachmentPath2)
         {
+            string smtpPassword = ConfigurationManager.AppSettings["SmtpPassword"];
+
             MailMessage mail = new MailMessage();
             SmtpClient SmtpServer = new SmtpClient("smtp.gmail.com");
+            string fromEmail = fromMail.Text;
 
-            mail.From = new MailAddress("gurerg03@gmail.com");
+            mail.From = new MailAddress(fromEmail);
             mail.To.Add(toEmail);
+
+            string currentMonthName = DateTime.Now.ToString("MMMM", new System.Globalization.CultureInfo("tr-TR"));
+            string subject = $"Vodafone Silver ÖKC {currentMonthName} Ayı Mutal";
+
             mail.Subject = subject;
             mail.Body = body;
             Attachment attachment = new Attachment(attachmentPath);
             mail.Attachments.Add(attachment);
+            Attachment attachment2 = new Attachment(attachmentPath2);
+            mail.Attachments.Add(attachment2);
 
             SmtpServer.Port = 587;
-            SmtpServer.Credentials = new NetworkCredential("gurerg03@gmail.com", "rnur scsl vydm czbm");
+            SmtpServer.Credentials = new NetworkCredential(fromEmail, smtpPassword);
             SmtpServer.EnableSsl = true;
 
             try
@@ -362,6 +368,11 @@ namespace excellParcalamaApplication
         }
 
         private void EXCELL_APPLİCATİON_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e)
         {
 
         }

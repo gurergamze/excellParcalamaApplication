@@ -35,15 +35,17 @@
             this.button_exit = new System.Windows.Forms.Button();
             this.mailBody = new System.Windows.Forms.TextBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.label2 = new System.Windows.Forms.Label();
+            this.fromMail = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // button_parcala
             // 
             this.button_parcala.BackColor = System.Drawing.Color.LightGray;
             this.button_parcala.ForeColor = System.Drawing.Color.DarkRed;
-            this.button_parcala.Location = new System.Drawing.Point(12, 65);
+            this.button_parcala.Location = new System.Drawing.Point(12, 105);
             this.button_parcala.Name = "button_parcala";
-            this.button_parcala.Size = new System.Drawing.Size(275, 58);
+            this.button_parcala.Size = new System.Drawing.Size(312, 58);
             this.button_parcala.TabIndex = 0;
             this.button_parcala.Text = "EMAIL GONDER";
             this.button_parcala.UseVisualStyleBackColor = false;
@@ -52,7 +54,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(9, 31);
+            this.label1.Location = new System.Drawing.Point(9, 32);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(124, 13);
             this.label1.TabIndex = 1;
@@ -60,7 +62,7 @@
             // 
             // textBox_colomn_name
             // 
-            this.textBox_colomn_name.Location = new System.Drawing.Point(142, 28);
+            this.textBox_colomn_name.Location = new System.Drawing.Point(179, 29);
             this.textBox_colomn_name.Name = "textBox_colomn_name";
             this.textBox_colomn_name.Size = new System.Drawing.Size(145, 20);
             this.textBox_colomn_name.TabIndex = 2;
@@ -69,9 +71,9 @@
             // 
             this.button_exit.BackColor = System.Drawing.Color.LightGray;
             this.button_exit.ForeColor = System.Drawing.Color.DarkRed;
-            this.button_exit.Location = new System.Drawing.Point(12, 129);
+            this.button_exit.Location = new System.Drawing.Point(12, 169);
             this.button_exit.Name = "button_exit";
-            this.button_exit.Size = new System.Drawing.Size(275, 58);
+            this.button_exit.Size = new System.Drawing.Size(312, 58);
             this.button_exit.TabIndex = 3;
             this.button_exit.Text = "ÇIKIŞ";
             this.button_exit.UseVisualStyleBackColor = false;
@@ -82,7 +84,7 @@
             this.mailBody.Location = new System.Drawing.Point(12, 243);
             this.mailBody.Multiline = true;
             this.mailBody.Name = "mailBody";
-            this.mailBody.Size = new System.Drawing.Size(275, 233);
+            this.mailBody.Size = new System.Drawing.Size(312, 233);
             this.mailBody.TabIndex = 4;
             // 
             // contextMenuStrip1
@@ -90,12 +92,31 @@
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(9, 54);
+            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(146, 13);
+            this.label2.TabIndex = 5;
+            this.label2.Text = "GÖNDEREN MAİL ADRESİ :";
+            // 
+            // fromMail
+            // 
+            this.fromMail.Location = new System.Drawing.Point(179, 55);
+            this.fromMail.Name = "fromMail";
+            this.fromMail.Size = new System.Drawing.Size(145, 20);
+            this.fromMail.TabIndex = 6;
+            // 
             // EXCELL_APPLİCATİON
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(299, 486);
+            this.ClientSize = new System.Drawing.Size(340, 486);
+            this.Controls.Add(this.fromMail);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.mailBody);
             this.Controls.Add(this.button_exit);
             this.Controls.Add(this.textBox_colomn_name);
@@ -118,6 +139,8 @@
         private System.Windows.Forms.Button button_exit;
         private System.Windows.Forms.TextBox mailBody;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox fromMail;
     }
 }
 
