@@ -70,7 +70,7 @@ namespace excellParcalamaApplication
              {
                  fileInfo = new FileInfo(dosya);
                  fileInfo.Delete();
-
+            Türkçe
              }*/
             foreach (string dosya in Directory.GetFiles(folderPath))
             {
@@ -126,7 +126,7 @@ namespace excellParcalamaApplication
                 MessageBox.Show("Parçalama İşlemi Tamamlandı.");
 
 
-               
+
 
                 if (openFileDialog2.ShowDialog() == DialogResult.OK)
                 {
@@ -142,134 +142,102 @@ namespace excellParcalamaApplication
 
                     try
                     {
-                        using (var workbook = new XLWorkbook(vdmFilePath))
+                        
+                        using (OleDbConnection con2 = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + vdmFilePath + "; Extended Properties='Excel 12.0 xml;HDR=YES;'"))
                         {
-                            // Var olan sayfaların adlarını al ve kullanıcıya göster
-                            var sheetNames = workbook.Worksheets.Select(ws => ws.Name).ToList();
-                            MessageBox.Show($"Mevcut sayfalar: {string.Join(", ", sheetNames)}");
-
-                            // İlk sayfayı otomatik olarak seç
-                            var worksheet = workbook.Worksheet(1);
-                            var headerRow = worksheet.Row(1);
-
-                            if (headerRow.Cells().Count() == 0)
-                            {
-                                MessageBox.Show("Başlık satırı bulunamadı.");
-                                return;
-                            }
-
-                            // DataTable'a sütun ekleme
-                            foreach (var cell in headerRow.Cells())
-                            {
-                                dtVdmInfo.Columns.Add(cell.GetValue<string>() ?? string.Empty);
-                            }
-
-                            // Veri satırlarını işleme
-                            for (int rowIndex = 2; rowIndex <= worksheet.LastRowUsed().RowNumber(); rowIndex++)
-                            {
-                                var row = worksheet.Row(rowIndex);
-                                if (row.Cells().All(cell => string.IsNullOrEmpty(cell.GetValue<string>())))
-                                {
-                                    continue;
-                                }
-
-                                var dataRow = dtVdmInfo.NewRow();
-                                for (int colIndex = 1; colIndex <= headerRow.Cells().Count(); colIndex++)
-                                {
-                                    dataRow[colIndex - 1] = row.Cell(colIndex).GetValue<string>() ?? string.Empty;
-                                }
-
-                                dtVdmInfo.Rows.Add(dataRow);
-                            }
+                            con2.Open();
+                            OleDbCommand cmd2 = new OleDbCommand("SELECT * FROM [Sayfa1$]", con); 
+                            OleDbDataAdapter da2 = new OleDbDataAdapter(cmd);
+                            da2.Fill(dtVdmInfo);
+                            con2.Close();
                         }
 
                         MessageBox.Show("Dosya başarıyla okundu.");
                     }
+
                     catch (Exception ex)
                     {
                         MessageBox.Show($"Dosya okuma hatası: {ex.Message}");
+                        return;
                     }
+
 
 
 
                     // Her VDM için genel toplam dosyası oluşturma
                     foreach (string vdmKod in VDM_kodlari)
-                     {
-                         string vdmParcaFilePath = Path.Combine(folderPath, vdmKod + ".xlsx");
-                         if (File.Exists(vdmParcaFilePath))
-                         {
-                             DataTable vdmParcaTable = new DataTable();
+                    {
+                        string vdmParcaFilePath = Path.Combine(folderPath, vdmKod + ".xlsx");
 
-                             using (var workbook = new XLWorkbook(vdmParcaFilePath))
-                             {
-                                 var worksheet = workbook.Worksheet(1);
-                                 bool firstRow = true;
+                        if (File.Exists(vdmParcaFilePath))
+                        {
+                            DataTable vdmParcaTable = new DataTable();
 
-                                 foreach (var row in worksheet.Rows())
-                                 {
-                                     if (firstRow)
-                                     {
-                                         foreach (var cell in row.Cells())
-                                             vdmParcaTable.Columns.Add(cell.Value.ToString());
-                                         firstRow = false;
-                                     }
-                                     else
-                                     {
-                                         vdmParcaTable.Rows.Add();
-                                         int i = 0;
-                                         foreach (var cell in row.Cells())
-                                             vdmParcaTable.Rows[vdmParcaTable.Rows.Count - 1][i++] = cell.Value;
-                                     }
-                                 }
-                             }
+                            using (OleDbConnection con3 = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + vdmParcaFilePath + "; Extended Properties='Excel 12.0 xml;HDR=YES;'"))
+                            {
+                                con3.Open();
+                                OleDbCommand cmd3 = new OleDbCommand("SELECT * FROM [Deneme$]", con3);
+                                OleDbDataAdapter da3 = new OleDbDataAdapter(cmd3);
+                                da3.Fill(vdmParcaTable);
+                                con3.Close();
+                            }
 
-                             // Genel toplam dosyası oluşturma
-                             var genelToplamResults = (from vdmRow in vdmParcaTable.AsEnumerable()
+
+                            // Genel toplam dosyası oluşturma
+                            var genelToplamResults = (from vdmRow in vdmParcaTable.AsEnumerable()
                                                        join vdmBilgiRow in dtVdmInfo.AsEnumerable()
                                                        on vdmRow.Field<string>(textBox_colomn_name.Text) equals vdmBilgiRow.Field<string>(textBox_colomn_name.Text)
+                                                       into joinedData
+                                                       from vdmBilgiRow in joinedData.DefaultIfEmpty()
                                                        select new
                                                        {
                                                            vdmRow,
                                                            vdmBilgiRow
                                                        }).ToList();
 
-                             DataTable genelToplamTable = new DataTable();
-                             foreach (DataColumn column in vdmParcaTable.Columns)
-                             {
-                                 genelToplamTable.Columns.Add(column.ColumnName);
-                             }
+                            DataTable genelToplamTable = new DataTable();
+                            foreach (DataColumn column in vdmParcaTable.Columns)
+                            {
+                                genelToplamTable.Columns.Add(column.ColumnName);
+                            }
 
-                             foreach (DataColumn column in dtVdmInfo.Columns)
-                             {
-                                 if (!genelToplamTable.Columns.Contains(column.ColumnName))
-                                     genelToplamTable.Columns.Add(column.ColumnName);
-                             }
+                            foreach (DataColumn column in dtVdmInfo.Columns)
+                            {
+                                if (!genelToplamTable.Columns.Contains(column.ColumnName))
+                                    genelToplamTable.Columns.Add(column.ColumnName);
+                            }
 
-                             DataRow newRow = genelToplamTable.NewRow();
-                             foreach (DataColumn column in vdmParcaTable.Columns)
-                             {
-                                 newRow[column.ColumnName] = genelToplamResults[0].vdmRow[column];
-                             }
+                            foreach (var result in genelToplamResults)
+                            {
+                                DataRow newRow = genelToplamTable.NewRow();
 
-                             foreach (DataColumn column in dtVdmInfo.Columns)
-                             {
-                                 newRow[column.ColumnName] = genelToplamResults[0].vdmBilgiRow[column];
-                             }
+                                foreach (DataColumn column in vdmParcaTable.Columns)
+                                {
+                                    newRow[column.ColumnName] = result.vdmRow[column];
+                                }
 
-                             genelToplamTable.Rows.Add(newRow);
+                                if (result.vdmBilgiRow != null)
+                                {
+                                    foreach (DataColumn column in dtVdmInfo.Columns)
+                                    {
+                                        newRow[column.ColumnName] = result.vdmBilgiRow[column];
+                                    }
+                                }
+
+                                genelToplamTable.Rows.Add(newRow);
+                            }
 
                             string genelToplamFileName = "Aylık Cihaz Ücret Detayı " + vdmKod;
-                            SetDataTable_To_Excel(genelToplamTable, genelToplamFileName);
-                        }
-                     }
-
-
-                     MessageBox.Show("Genel Toplam Dosyaları Oluşturuldu.");
+                        SetDataTable_To_Excel(genelToplamTable, genelToplamFileName);
+                    }
                 }
-                   
 
-                // Bayi İletişim Excel Dosyasını Seçme
-                OpenFileDialog openFileDialog3 = new OpenFileDialog()
+                MessageBox.Show("Genel Toplam Dosyaları Oluşturuldu.");
+            }
+
+
+            // Bayi İletişim Excel Dosyasını Seçme
+            OpenFileDialog openFileDialog3 = new OpenFileDialog()
                 {
                     Filter = "Excel Dosyası |*.xlsx| Excel Dosyası|*.xls",
                     Title = "Bayi İletişim Excel Dosyasını Seçiniz..",
@@ -280,27 +248,25 @@ namespace excellParcalamaApplication
                     string mailFilePath = openFileDialog3.FileName;
                     DataTable dtMailInfo = new DataTable();
 
-                    using (var workbook = new XLWorkbook(mailFilePath))
+                    string connectionString = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + mailFilePath + ";Extended Properties='Excel 12.0 xml;HDR=YES;'";
+                    using (OleDbConnection connection = new OleDbConnection(connectionString))
                     {
-                        var worksheet = workbook.Worksheet(1);
-                        bool firstRow = true;
-                        foreach (var row in worksheet.Rows())
+                        connection.Open();
+
+                   
+                        DataTable schemaTable = connection.GetOleDbSchemaTable(OleDbSchemaGuid.Tables, null);
+                        string firstSheetName = schemaTable.Rows[0]["TABLE_NAME"].ToString();
+
+                        
+                        string query = $"SELECT * FROM [{firstSheetName}]";
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(query, connection))
                         {
-                            if (firstRow)
-                            {
-                                foreach (var cell in row.Cells())
-                                    dtMailInfo.Columns.Add(cell.Value.ToString());
-                                firstRow = false;
-                            }
-                            else
-                            {
-                                dtMailInfo.Rows.Add();
-                                int i = 0;
-                                foreach (var cell in row.Cells())
-                                    dtMailInfo.Rows[dtMailInfo.Rows.Count - 1][i++] = cell.Value;
-                            }
+                            adapter.Fill(dtMailInfo);
                         }
+
+                        connection.Close();
                     }
+
                     string emailBody = mailBody.Text;
 
                     foreach (DataRow row in dtMailInfo.Rows)
@@ -310,9 +276,13 @@ namespace excellParcalamaApplication
                         // string attachmentPath = AppDomain.CurrentDomain.BaseDirectory.ToString() + @"ExcelExport\" + VDMKodu + ".xlsx";
                         string attachmentPath = Path.Combine(folderPath, VDMKodu + ".xlsx");
                         string attachmentPath2 = Path.Combine(folderPath, "Aylık Cihaz Ücret Detayı " + VDMKodu + ".xlsx");
-                        if (File.Exists(attachmentPath))
+                        if (File.Exists(attachmentPath) && File.Exists(attachmentPath2))
                         {
                             SendEmail(email, emailBody, attachmentPath, attachmentPath2);
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Dosya eksik: {VDMKodu} için dosya(lar) bulunamadı.");
                         }
                     }
 
